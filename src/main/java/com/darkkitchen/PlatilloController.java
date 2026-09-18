@@ -11,7 +11,7 @@ public class PlatilloController {
 
     private final String URL = "jdbc:mysql://localhost:3306/DarkKitchen";
     private final String USER = "root";     // Cambia si es necesario
-    private final String PASS = "root";     // Cambia si es necesario
+    private final String PASS = "1234";     // Cambia si es necesario
 
     private Connection getConnection() throws SQLException {
         return DriverManager.getConnection(URL, USER, PASS);
