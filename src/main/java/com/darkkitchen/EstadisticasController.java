@@ -16,7 +16,7 @@ public class EstadisticasController {
     // Asegúrate de poner aquí tu contraseña de Workbench también
     private final String URL = "jdbc:mysql://localhost:3306/DarkKitchen";
     private final String USER = "root";
-    private final String PASS = "TU_CONTRASEÑA";
+    private final String PASS = "1234";
 
     private Connection getConnection() throws SQLException {
         return DriverManager.getConnection(URL, USER, PASS);
