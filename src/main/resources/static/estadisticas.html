@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Analíticas - Dark Kitchen</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #181818; color: #fff; margin: 0; padding: 20px; }
+        .dashboard { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; max-width: 1200px; margin: 0 auto; }
+        .card { background: #282828; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+        h2 { text-align: center; color: #aaaaaa; font-weight: normal; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { padding: 10px; border-bottom: 1px solid #444; text-align: left; }
+        th { color: #00e5ff; }
+    </style>
+</head>
+<body>
+
+<h1 style="text-align: center;">📈 Panel de Rendimiento (Studio Analytics)</h1>
+
+<div class="dashboard">
+    <!-- Gráfica de Platillos -->
+    <div class="card">
+        <h2>Platillos Más Vendidos</h2>
+        <canvas id="graficaPlatillos"></canvas>
+    </div>
+
+    <!-- Tabla de Clientes -->
+    <div class="card">
+        <h2>Frecuencia y Retención de Clientes</h2>
+        <table>
+            <thead>
+            <tr>
+                <th>Cliente</th>
+                <th>Pedidos Realizados</th>
+                <th>Ingresos Generados</th>
+            </tr>
+            </thead>
+            <tbody id="tablaClientes">
+            <!-- Llenado dinámico -->
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    // Cargar gráfica de platillos
+    async function cargarTopPlatillos() {
+        const respuesta = await fetch('/api/estadisticas/top-platillos');
+        const datos = await respuesta.json();
+
+        const nombres = datos.map(d => d.nombre);
+        const cantidades = datos.map(d => d.vendidos);
+
+        new Chart(document.getElementById('graficaPlatillos'), {
+            type: 'bar',
+            data: {
+                labels: nombres,
+                datasets: [{
+                    label: 'Unidades Vendidas',
+                    data: cantidades,
+                    backgroundColor: '#ff0050',
+                    borderRadius: 5
+                }]
+            },
+            options: {
+                scales: { y: { beginAtZero: true, grid: { color: '#444' } }, x: { grid: { display: false } } },
+                plugins: { legend: { display: false } }
+            }
+        });
+    }
+
+    // Cargar tabla de clientes
+    async function cargarClientes() {
+        const respuesta = await fetch('/api/estadisticas/clientes-frecuentes');
+        const datos = await respuesta.json();
+        const tbody = document.getElementById('tablaClientes');
+
+        datos.forEach(c => {
+            tbody.innerHTML += `
+                <tr>
+                    <td>${c.nombre}</td>
+                    <td>${c.compras}</td>                         <td>$${c.gastado.toFixed(2)}</td>
+                </tr>`;
+        });
+    }
+
+    window.onload = () => {
+        cargarTopPlatillos();
+        cargarClientes();
+    };
+</script>
+</body>
+</html>
