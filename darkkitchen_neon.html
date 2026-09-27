@@ -1,0 +1,2734 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JokerPoker - Comida Premium</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Space+Mono:wght@400;700&display=swap');
+
+        :root {
+            --neon-pink: #FF006E;
+            --neon-cyan: #00F5FF;
+            --neon-purple: #B700FF;
+            --neon-green: #39FF14;
+            --neon-orange: #FF9500;
+            --dark-bg: #0a0a0a;
+            --darker-bg: #050505;
+            --card-bg: #1a1a2e;
+            --border-color: #16213e;
+            --text-primary: #ffffff;
+            --text-secondary: #b0b0b0;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Space Mono', monospace;
+            background: var(--dark-bg);
+            color: var(--text-primary);
+            overflow-x: hidden;
+            background-image: 
+                radial-gradient(circle at 20% 50%, rgba(255, 0, 110, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(183, 0, 255, 0.1) 0%, transparent 50%);
+        }
+
+        /* NEON GLOW EFFECT */
+        @keyframes neon-glow {
+            0%, 100% {
+                text-shadow: 0 0 10px var(--neon-pink), 0 0 20px var(--neon-pink), 0 0 30px var(--neon-pink);
+            }
+            50% {
+                text-shadow: 0 0 20px var(--neon-pink), 0 0 30px var(--neon-pink), 0 0 40px var(--neon-pink);
+            }
+        }
+
+        @keyframes neon-glow-cyan {
+            0%, 100% {
+                text-shadow: 0 0 10px var(--neon-cyan), 0 0 20px var(--neon-cyan), 0 0 30px var(--neon-cyan);
+            }
+            50% {
+                text-shadow: 0 0 20px var(--neon-cyan), 0 0 30px var(--neon-cyan), 0 0 40px var(--neon-cyan);
+            }
+        }
+
+        @keyframes pulse-border {
+            0%, 100% {
+                border-color: var(--neon-cyan);
+                box-shadow: 0 0 10px rgba(0, 245, 255, 0.3);
+            }
+            50% {
+                border-color: var(--neon-pink);
+                box-shadow: 0 0 20px rgba(255, 0, 110, 0.5);
+            }
+        }
+
+        @keyframes float-up {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes scanlines {
+            0% {
+                transform: translateY(0);
+            }
+            100% {
+                transform: translateY(10px);
+            }
+        }
+
+        @keyframes glow-box {
+            0%, 100% {
+                box-shadow: 0 0 20px rgba(0, 245, 255, 0.3), inset 0 0 20px rgba(0, 245, 255, 0.1);
+            }
+            50% {
+                box-shadow: 0 0 40px rgba(0, 245, 255, 0.6), inset 0 0 30px rgba(0, 245, 255, 0.2);
+            }
+        }
+
+        @keyframes wave-border {
+            0% {
+                border-image-source: linear-gradient(90deg, var(--neon-pink), var(--neon-cyan), var(--neon-purple));
+            }
+            50% {
+                border-image-source: linear-gradient(90deg, var(--neon-cyan), var(--neon-purple), var(--neon-pink));
+            }
+            100% {
+                border-image-source: linear-gradient(90deg, var(--neon-purple), var(--neon-pink), var(--neon-cyan));
+            }
+        }
+
+        @keyframes data-flow {
+            0% {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            50% {
+                opacity: 1;
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+        }
+
+        .animate-glow {
+            animation: glow-box 3s infinite;
+        }
+
+        .animate-data {
+            animation: data-flow 2s infinite;
+        }
+
+        /* HEADER */
+        /* ==================== ESTADO DE CONEXIÓN ==================== */
+        @keyframes dot-pulse-ok {
+            0%, 100% { box-shadow: 0 0 6px 2px rgba(57, 255, 20, 0.6); }
+            50% { box-shadow: 0 0 14px 6px rgba(57, 255, 20, 0.9); }
+        }
+
+        @keyframes dot-pulse-bad {
+            0%, 100% { box-shadow: 0 0 6px 2px rgba(255, 0, 110, 0.6); }
+            50% { box-shadow: 0 0 14px 6px rgba(255, 0, 110, 0.9); }
+        }
+
+        @keyframes dot-pulse-wait {
+            0%, 100% { box-shadow: 0 0 6px 2px rgba(255, 149, 0, 0.6); }
+            50% { box-shadow: 0 0 14px 6px rgba(255, 149, 0, 0.9); }
+        }
+
+        .conn-status {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.4rem 0.8rem;
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            background: rgba(0, 0, 0, 0.3);
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .conn-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--neon-orange);
+            animation: dot-pulse-wait 1.2s infinite;
+            flex-shrink: 0;
+        }
+
+        .conn-status.ok .conn-dot { background: var(--neon-green); animation: dot-pulse-ok 2s infinite; }
+        .conn-status.bad .conn-dot { background: var(--neon-pink); animation: dot-pulse-bad 1s infinite; }
+
+        .conn-label {
+            font-size: 0.65rem;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+            white-space: nowrap;
+        }
+
+        .conn-status.ok .conn-label { color: var(--neon-green); }
+        .conn-status.bad .conn-label { color: var(--neon-pink); }
+
+        /* Banner de aviso cuando el backend no responde */
+        .offline-banner {
+            display: none;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            text-align: center;
+            padding: 0.9rem 1.5rem;
+            background: linear-gradient(90deg, rgba(255, 0, 110, 0.18), rgba(183, 0, 255, 0.18));
+            border-bottom: 1px solid var(--neon-pink);
+            font-size: 0.8rem;
+            letter-spacing: 1px;
+            color: #ffd6e8;
+            animation: float-up 0.35s ease;
+            flex-wrap: wrap;
+        }
+
+        .offline-banner.show { display: flex; }
+
+        .offline-banner button {
+            padding: 0.35rem 1rem;
+            border: 1px solid var(--neon-pink);
+            background: transparent;
+            color: var(--neon-pink);
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: 'Space Mono', monospace;
+            font-weight: 700;
+            letter-spacing: 1px;
+            transition: all 0.2s ease;
+        }
+
+        .offline-banner button:hover {
+            background: var(--neon-pink);
+            color: var(--dark-bg);
+        }
+
+        /* ==================== TOASTS ==================== */
+        .toast-container {
+            position: fixed;
+            top: 1.5rem;
+            right: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            z-index: 9999;
+        }
+
+        .toast {
+            min-width: 260px;
+            max-width: 340px;
+            padding: 0.9rem 1.1rem;
+            border-radius: 8px;
+            background: var(--card-bg);
+            border-left: 4px solid var(--neon-cyan);
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.5);
+            font-size: 0.8rem;
+            line-height: 1.4;
+            animation: toast-in 0.35s ease, toast-out 0.35s ease 4.2s forwards;
+            display: flex;
+            gap: 0.6rem;
+            align-items: flex-start;
+        }
+
+        .toast.success { border-left-color: var(--neon-green); }
+        .toast.error { border-left-color: var(--neon-pink); }
+        .toast.warning { border-left-color: var(--neon-orange); }
+
+        .toast-icon { font-size: 1.1rem; line-height: 1; }
+
+        @keyframes toast-in {
+            from { opacity: 0; transform: translateX(40px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        @keyframes toast-out {
+            from { opacity: 1; transform: translateX(0); }
+            to { opacity: 0; transform: translateX(40px); }
+        }
+
+        /* Entrada escalonada de tarjetas del menú */
+        .menu-item {
+            animation: float-up 0.45s ease both;
+        }
+
+        /* Skeleton de carga mientras llega la respuesta del API */
+        .skeleton-card {
+            height: 190px;
+            border-radius: 10px;
+            background: linear-gradient(100deg, #1a1a2e 30%, #23233f 50%, #1a1a2e 70%);
+            background-size: 200% 100%;
+            animation: skeleton-sweep 1.3s infinite;
+        }
+
+        @keyframes skeleton-sweep {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        .header {
+            background: linear-gradient(135deg, rgba(10, 10, 10, 0.95) 0%, rgba(26, 26, 46, 0.8) 100%);
+            border-bottom: 2px solid var(--neon-cyan);
+            border-bottom-width: 1px;
+            border-image: linear-gradient(90deg, var(--neon-pink), var(--neon-cyan), var(--neon-purple)) 1;
+            padding: 1.5rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 0 30px rgba(0, 245, 255, 0.2);
+        }
+
+        .logo {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2rem;
+            font-weight: 900;
+            letter-spacing: 3px;
+            animation: neon-glow 2s infinite;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .user-info {
+            text-align: right;
+        }
+
+        .user-name {
+            font-size: 0.9rem;
+            color: var(--neon-cyan);
+            font-weight: 700;
+            animation: neon-glow-cyan 2s infinite;
+        }
+
+        .user-role {
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .btn {
+            padding: 0.7rem 1.5rem;
+            border: 2px solid var(--neon-cyan);
+            background: transparent;
+            color: var(--neon-cyan);
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.85rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn:active {
+            transform: scale(0.95);
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: var(--neon-cyan);
+            z-index: -1;
+            transition: left 0.3s ease;
+        }
+
+        .btn:hover {
+            color: var(--dark-bg);
+            box-shadow: 0 0 20px rgba(0, 245, 255, 0.6);
+            text-shadow: none;
+        }
+
+        .btn:hover::before {
+            left: 0;
+        }
+
+        .btn-pink {
+            border-color: var(--neon-pink);
+            color: var(--neon-pink);
+        }
+
+        .btn-pink::before {
+            background: var(--neon-pink);
+        }
+
+        .btn-pink:hover {
+            box-shadow: 0 0 20px rgba(255, 0, 110, 0.6);
+        }
+
+        .btn-admin {
+            border-color: var(--neon-purple);
+            color: var(--neon-purple);
+            animation: pulse-admin 2s infinite;
+        }
+
+        .btn-admin::before {
+            background: var(--neon-purple);
+        }
+
+        .btn-admin:hover {
+            box-shadow: 0 0 20px rgba(183, 0, 255, 0.6);
+        }
+
+        .btn-admin.active {
+            background: var(--neon-purple);
+            color: var(--dark-bg);
+            box-shadow: 0 0 30px rgba(183, 0, 255, 0.8);
+        }
+
+        @keyframes pulse-admin {
+            0%, 100% {
+                border-color: var(--neon-purple);
+            }
+            50% {
+                border-color: var(--neon-pink);
+                box-shadow: 0 0 15px rgba(183, 0, 255, 0.4);
+            }
+        }
+
+        /* MAIN CONTAINER */
+        .container {
+            min-height: 100vh;
+            display: grid;
+            grid-template-columns: 1fr;
+        }
+
+        .main-content {
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        /* SECTIONS */
+        .section {
+            display: none;
+            animation: float-up 0.6s ease;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        /* CLIENTE - MENÚ */
+        .menu-section {
+            margin-bottom: 3rem;
+        }
+
+        .section-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2rem;
+            font-weight: 900;
+            letter-spacing: 2px;
+            margin-bottom: 1rem;
+            color: var(--neon-pink);
+            animation: neon-glow 2s infinite;
+        }
+
+        .section-subtitle {
+            color: var(--neon-cyan);
+            margin-bottom: 2rem;
+            font-size: 0.9rem;
+            letter-spacing: 2px;
+        }
+
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .menu-item {
+            background: linear-gradient(135deg, rgba(26, 26, 46, 0.6) 0%, rgba(22, 33, 62, 0.8) 100%);
+            border: 2px solid var(--neon-cyan);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            animation: float-up 0.6s ease;
+        }
+
+        .menu-item::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -100%;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--neon-pink), var(--neon-cyan), transparent);
+            animation: slide-shine 3s infinite;
+        }
+
+        @keyframes slide-shine {
+            0% {
+                left: -100%;
+            }
+            100% {
+                left: 100%;
+            }
+        }
+
+        .menu-item:hover {
+            border-color: var(--neon-pink);
+            box-shadow: 0 0 20px rgba(255, 0, 110, 0.4), inset 0 0 20px rgba(255, 0, 110, 0.1);
+            transform: translateY(-5px);
+        }
+
+        .menu-item h3 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+            color: var(--neon-cyan);
+        }
+
+        .menu-item .price {
+            font-size: 1.4rem;
+            color: var(--neon-green);
+            font-weight: bold;
+            margin: 0.5rem 0;
+            font-family: 'Orbitron', sans-serif;
+            letter-spacing: 1px;
+        }
+
+        .menu-item .cost {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+        }
+
+        .quantity-control {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .quantity-control button {
+            width: 35px;
+            height: 35px;
+            border: 1px solid var(--neon-cyan);
+            background: transparent;
+            color: var(--neon-cyan);
+            border-radius: 0.3rem;
+            cursor: pointer;
+            font-size: 1.2rem;
+            font-weight: bold;
+            transition: all 0.2s ease;
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        .quantity-control button:hover {
+            background: var(--neon-cyan);
+            color: var(--dark-bg);
+            box-shadow: 0 0 10px rgba(0, 245, 255, 0.6);
+        }
+
+        .quantity-control input {
+            width: 50px;
+            text-align: center;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid var(--neon-purple);
+            color: var(--neon-green);
+            padding: 0.4rem;
+            border-radius: 0.3rem;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: bold;
+        }
+
+        /* CARRITO */
+        .cart-section {
+            background: linear-gradient(135deg, rgba(26, 26, 46, 0.6) 0%, rgba(22, 33, 62, 0.8) 100%);
+            border: 2px solid var(--neon-purple);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 0 20px rgba(183, 0, 255, 0.2);
+        }
+
+        .cart-section h2 {
+            font-family: 'Orbitron', sans-serif;
+            color: var(--neon-purple);
+            margin-bottom: 1.5rem;
+            font-size: 1.3rem;
+        }
+
+        .cart-items {
+            max-height: 300px;
+            overflow-y: auto;
+            margin-bottom: 1rem;
+        }
+
+        .cart-items::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .cart-items::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        .cart-items::-webkit-scrollbar-thumb {
+            background: var(--neon-cyan);
+            border-radius: 4px;
+        }
+
+        .cart-item {
+            animation: float-up 0.3s ease both;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.8rem 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .cart-item-info {
+            flex: 1;
+        }
+
+        .cart-item-name {
+            font-weight: 600;
+            color: var(--neon-cyan);
+            margin-bottom: 0.2rem;
+        }
+
+        .cart-item-detail {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .cart-item-total {
+            font-weight: bold;
+            color: var(--neon-green);
+            min-width: 100px;
+            text-align: right;
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        .remove-btn {
+            background: transparent;
+            color: var(--neon-pink);
+            border: 1px solid var(--neon-pink);
+            padding: 0.3rem 0.6rem;
+            border-radius: 0.3rem;
+            cursor: pointer;
+            font-size: 0.8rem;
+            margin-left: 0.5rem;
+            transition: all 0.2s ease;
+            font-weight: bold;
+        }
+
+        .remove-btn:hover {
+            background: var(--neon-pink);
+            color: var(--dark-bg);
+            box-shadow: 0 0 10px rgba(255, 0, 110, 0.6);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 2rem 1rem;
+            color: var(--text-secondary);
+        }
+
+        .cart-summary {
+            background: rgba(0, 245, 255, 0.1);
+            border: 1px solid var(--neon-cyan);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+            font-size: 0.95rem;
+            color: var(--neon-cyan);
+        }
+
+        .summary-row.total {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: var(--neon-green);
+            border-top: 1px solid var(--neon-cyan);
+            padding-top: 0.5rem;
+            margin-top: 0.5rem;
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        /* CHECKOUT */
+        .checkout-form {
+            max-width: 600px;
+            margin: 0 auto;
+            animation: float-up 0.6s ease;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--neon-cyan);
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.9rem;
+            letter-spacing: 1px;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 0.8rem;
+            background: rgba(26, 26, 46, 0.6);
+            border: 2px solid var(--neon-cyan);
+            color: var(--neon-green);
+            border-radius: 0.4rem;
+            font-size: 0.95rem;
+            font-family: 'Space Mono', monospace;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--neon-pink);
+            box-shadow: 0 0 20px rgba(255, 0, 110, 0.3);
+        }
+
+        .form-group input::placeholder {
+            color: var(--text-secondary);
+        }
+
+        /* ADMIN PANEL */
+        .admin-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, rgba(26, 26, 46, 0.6) 0%, rgba(22, 33, 62, 0.8) 100%);
+            border: 2px solid var(--neon-cyan);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            border-left: 4px solid var(--neon-green);
+            box-shadow: 0 0 20px rgba(0, 245, 255, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            border-left-color: var(--neon-pink);
+            box-shadow: 0 0 30px rgba(255, 0, 110, 0.3);
+        }
+
+        .stat-card.danger {
+            border-left-color: var(--neon-pink);
+        }
+
+        .stat-card h3 {
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        .stat-card .number {
+            font-size: 2.5rem;
+            font-weight: 900;
+            margin-bottom: 0.5rem;
+            color: var(--neon-green);
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        .stat-card .detail {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        /* ADMIN TABS */
+        .admin-tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 2rem;
+            border-bottom: 2px solid var(--neon-cyan);
+            padding-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            padding: 0.7rem 1.2rem;
+            border: 2px solid var(--neon-cyan);
+            background: transparent;
+            color: var(--neon-cyan);
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.8rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-radius: 0.3rem;
+        }
+
+        .tab-btn:hover {
+            background: var(--neon-cyan);
+            color: var(--dark-bg);
+            box-shadow: 0 0 15px rgba(0, 245, 255, 0.5);
+        }
+
+        .tab-btn.active {
+            background: var(--neon-pink);
+            border-color: var(--neon-pink);
+            color: var(--dark-bg);
+            box-shadow: 0 0 20px rgba(255, 0, 110, 0.5);
+        }
+
+        /* KANBAN */
+        .kanban-board {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1rem;
+        }
+
+        .kanban-column {
+            background: rgba(26, 26, 46, 0.4);
+            border: 2px solid var(--neon-cyan);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            min-height: 400px;
+        }
+
+        .kanban-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            color: var(--neon-pink);
+            letter-spacing: 1px;
+        }
+
+        .kanban-card {
+            background: linear-gradient(135deg, rgba(26, 26, 46, 0.8) 0%, rgba(22, 33, 62, 0.9) 100%);
+            border: 1px solid var(--neon-purple);
+            border-radius: 0.4rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .kanban-card:hover {
+            border-color: var(--neon-pink);
+            box-shadow: 0 0 15px rgba(255, 0, 110, 0.4);
+            transform: translateY(-3px);
+        }
+
+        /* TABLA */
+        .table-container {
+            background: linear-gradient(135deg, rgba(26, 26, 46, 0.6) 0%, rgba(22, 33, 62, 0.8) 100%);
+            border: 2px solid var(--neon-cyan);
+            border-radius: 0.5rem;
+            overflow: hidden;
+            margin-bottom: 2rem;
+            box-shadow: 0 0 20px rgba(0, 245, 255, 0.2);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+
+        thead {
+            background: rgba(0, 245, 255, 0.1);
+            border-bottom: 2px solid var(--neon-cyan);
+        }
+
+        th {
+            padding: 1rem;
+            text-align: left;
+            font-weight: 700;
+            color: var(--neon-cyan);
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 2px;
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-primary);
+        }
+
+        tbody tr:hover {
+            background: rgba(0, 245, 255, 0.05);
+        }
+
+        /* MODAL */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, rgba(10, 10, 10, 0.95) 0%, rgba(26, 26, 46, 0.95) 100%);
+            border: 2px solid var(--neon-pink);
+            border-radius: 0.5rem;
+            padding: 2rem;
+            max-width: 500px;
+            width: 90%;
+            animation: float-up 0.3s ease;
+            box-shadow: 0 0 40px rgba(255, 0, 110, 0.4);
+            position: relative;
+        }
+
+        .modal-header {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 1.5rem;
+            color: var(--neon-pink);
+            animation: neon-glow 2s infinite;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: transparent;
+            border: 2px solid var(--neon-cyan);
+            color: var(--neon-cyan);
+            font-size: 1.5rem;
+            cursor: pointer;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 0.3rem;
+            transition: all 0.3s ease;
+        }
+
+        .modal-close:hover {
+            background: var(--neon-cyan);
+            color: var(--dark-bg);
+            box-shadow: 0 0 10px rgba(0, 245, 255, 0.6);
+        }
+
+
+
+        /* RESPONSIVE */
+        @media (max-width: 768px) {
+            .logo {
+                font-size: 1.4rem;
+            }
+
+            .section-title {
+                font-size: 1.5rem;
+            }
+
+            .menu-grid {
+                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            }
+
+            .kanban-board {
+                grid-template-columns: 1fr;
+            }
+
+            .admin-grid {
+                grid-template-columns: 1fr;
+            }
+
+            table {
+                font-size: 0.8rem;
+            }
+
+            th, td {
+                padding: 0.75rem;
+            }
+
+            .header {
+                flex-direction: column;
+                gap: 1rem;
+                text-align: center;
+            }
+
+            .header-right {
+                flex-direction: column;
+                width: 100%;
+            }
+
+            .admin-tabs {
+                flex-direction: column;
+            }
+
+            .tab-btn {
+                width: 100%;
+            }
+        }
+
+        /* SCROLLBAR */
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--neon-cyan);
+            border-radius: 5px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--neon-pink);
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 0.3rem 0.8rem;
+            border-radius: 0.3rem;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border: 1px solid;
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        .status-pendiente {
+            border-color: var(--neon-orange);
+            color: var(--neon-orange);
+            background: rgba(255, 149, 0, 0.1);
+        }
+
+        .status-preparacion {
+            border-color: var(--neon-cyan);
+            color: var(--neon-cyan);
+            background: rgba(0, 245, 255, 0.1);
+        }
+
+        .status-entregado {
+            border-color: var(--neon-green);
+            color: var(--neon-green);
+            background: rgba(57, 255, 20, 0.1);
+        }
+
+        .report-section {
+            animation: float-up 0.6s ease;
+        }
+    </style>
+</head>
+<body>
+    <!-- HEADER -->
+    <div class="header">
+        <div class="logo" onclick="goHome()">🃏 JOKERPOKER</div>
+        
+        <div class="header-right">
+            <div class="conn-status" id="connStatus" onclick="checkConnection(true)" title="Click para reintentar">
+                <div class="conn-dot" id="connDot"></div>
+                <div class="conn-label" id="connLabel">Conectando...</div>
+            </div>
+            <div class="user-info">
+                <div class="user-name" id="userName">Usuario</div>
+                <div class="user-role">CLIENTE</div>
+            </div>
+            <button class="btn btn-admin" id="adminBtn" onclick="toggleAdminPanel()">ADMIN</button>
+            <button class="btn" onclick="logout()">LOGOUT</button>
+        </div>
+    </div>
+
+    <!-- AVISO DE SERVIDOR CAÍDO -->
+    <div class="offline-banner" id="offlineBanner">
+        <span>🔌 No hay conexión con el servidor (<span id="offlineUrl">http://localhost:3000</span>). Verifica que <code>node server.js</code> esté corriendo y que MySQL esté encendido.</span>
+        <button onclick="checkConnection(true)">REINTENTAR</button>
+    </div>
+
+    <!-- TOASTS -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- MAIN CONTENT -->
+    <div class="container">
+        <div class="main-content">
+            <!-- SECCIÓN CLIENTE -->
+            <div class="section active" id="cliente">
+                <!-- MENÚ -->
+                <div class="menu-section">
+                    <h1 class="section-title">⚡ MENÚ</h1>
+                    <p class="section-subtitle">Selecciona tus platillos favoritos</p>
+                    
+                    <div class="menu-grid" id="menuGrid"></div>
+                </div>
+
+                <!-- CARRITO -->
+                <div class="cart-section">
+                    <h2>🛒 TU PEDIDO</h2>
+                    <div class="cart-items" id="cartItems">
+                        <div class="empty-state">
+                            <p>CARRITO VACÍO</p>
+                        </div>
+                    </div>
+                    
+                    <div class="cart-summary" id="cartSummary" style="display: none;">
+                        <div class="summary-row">
+                            <span>SUBTOTAL:</span>
+                            <span id="subtotal">$0.00</span>
+                        </div>
+                        <div class="summary-row">
+                            <span>COMISIÓN:</span>
+                            <span id="commission">$0.00</span>
+                        </div>
+                        <div class="summary-row total">
+                            <span>TOTAL:</span>
+                            <span id="total">$0.00</span>
+                        </div>
+                    </div>
+
+                    <button class="btn btn-pink" onclick="showCheckout()" style="width: 100%; margin-top: 1rem; padding: 1rem;">IR AL CHECKOUT</button>
+                </div>
+            </div>
+
+            <!-- CHECKOUT -->
+            <div class="section" id="checkout">
+                <h1 class="section-title">💳 CONFIRMAR COMPRA</h1>
+                <p class="section-subtitle">Completa tus datos de entrega</p>
+                
+                <div class="checkout-form">
+                    <div class="form-group">
+                        <label>NOMBRE COMPLETO *</label>
+                        <input type="text" id="checkoutName" placeholder="Tu nombre" required>
+                    </div>
+                    <div class="form-group">
+                        <label>TELÉFONO *</label>
+                        <input type="tel" id="checkoutPhone" placeholder="Tu teléfono" required>
+                    </div>
+                    <div class="form-group">
+                        <label>CORREO *</label>
+                        <input type="email" id="checkoutEmail" placeholder="tu@email.com" required>
+                    </div>
+                    <div class="form-group">
+                        <label>DIRECCIÓN *</label>
+                        <input type="text" id="checkoutAddress" placeholder="Dirección de entrega" required>
+                    </div>
+                    <div class="form-group">
+                        <label>PLATAFORMA *</label>
+                        <select id="checkoutPlatform" required onchange="updateCheckoutTotal()">
+                            <option value="">Selecciona plataforma</option>
+                            <option value="1">Uber Eats (30%)</option>
+                            <option value="2">Didi Food (25%)</option>
+                            <option value="3">Rappi (28%)</option>
+                            <option value="4">WhatsApp Directo (0%)</option>
+                            <option value="5">Propia Web (2%)</option>
+                        </select>
+                    </div>
+
+                    <div class="cart-summary" style="margin: 1.5rem 0;">
+                        <div class="summary-row">
+                            <span>SUBTOTAL:</span>
+                            <span id="checkoutSubtotal">$0.00</span>
+                        </div>
+                        <div class="summary-row">
+                            <span>COMISIÓN:</span>
+                            <span id="checkoutCommission">$0.00</span>
+                        </div>
+                        <div class="summary-row total">
+                            <span>TOTAL A PAGAR:</span>
+                            <span id="checkoutTotal">$0.00</span>
+                        </div>
+                    </div>
+
+                    <button class="btn btn-pink" style="width: 100%; margin-top: 2rem; padding: 1rem;" onclick="submitOrder()">CONFIRMAR PEDIDO</button>
+                </div>
+            </div>
+
+            <!-- ADMIN PANEL -->
+            <div class="section" id="admin">
+                <h1 class="section-title">⚙️ PANEL ADMIN</h1>
+                <p class="section-subtitle">Control total del sistema</p>
+
+                <!-- ESTADÍSTICAS -->
+                <div class="admin-grid" id="statsGrid"></div>
+
+                <!-- TABS -->
+                <div class="admin-tabs">
+                    <button class="tab-btn active" onclick="showAdminTab('pedidos')">📦 PEDIDOS</button>
+                    <button class="tab-btn" onclick="showAdminTab('menu')">🍽️ MENÚ</button>
+                    <button class="tab-btn" onclick="showAdminTab('clientes')">👥 CLIENTES</button>
+                    <button class="tab-btn" onclick="showAdminTab('reportes')">📊 REPORTES</button>
+                </div>
+
+                <!-- TAB: PEDIDOS (KANBAN) -->
+                <div id="tab-pedidos" class="admin-tab">
+                    <div class="kanban-board">
+                        <div class="kanban-column">
+                            <div class="kanban-title">⏳ PENDIENTE</div>
+                            <div id="kanban-pendiente"></div>
+                        </div>
+                        <div class="kanban-column">
+                            <div class="kanban-title">👨‍🍳 PREPARANDO</div>
+                            <div id="kanban-preparacion"></div>
+                        </div>
+                        <div class="kanban-column">
+                            <div class="kanban-title">✅ ENTREGADO</div>
+                            <div id="kanban-entregado"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB: MENÚ -->
+                <div id="tab-menu" class="admin-tab" style="display: none;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 1.5rem;">
+                        <h2 class="section-title">GESTIÓN DE MENÚ</h2>
+                        <button class="btn btn-pink" onclick="showDishModal()">+ AGREGAR</button>
+                    </div>
+                    <div class="table-container">
+                        <table id="dishTable">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>NOMBRE</th>
+                                    <th>PRECIO</th>
+                                    <th>COSTO</th>
+                                    <th>GANANCIA</th>
+                                    <th>ACCIONES</th>
+                                </tr>
+                            </thead>
+                            <tbody id="dishTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- TAB: CLIENTES -->
+                <div id="tab-clientes" class="admin-tab" style="display: none;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 1.5rem;">
+                        <h2 class="section-title">CLIENTES</h2>
+                        <button class="btn btn-pink" onclick="showClientModal()">+ AGREGAR</button>
+                    </div>
+                    <div class="table-container">
+                        <table id="clientTable">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>NOMBRE</th>
+                                    <th>TELÉFONO</th>
+                                    <th>CORREO</th>
+                                    <th>DIRECCIÓN</th>
+                                </tr>
+                            </thead>
+                            <tbody id="clientTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- TAB: REPORTES -->
+                <div id="tab-reportes" class="admin-tab" style="display: none;">
+                    <h2 class="section-title">REPORTES</h2>
+                    
+                    <!-- SUB-TABS DE REPORTES -->
+                    <div class="admin-tabs" style="margin: 1.5rem 0; border-bottom: 1px solid var(--neon-cyan);">
+                        <button class="tab-btn active" onclick="showReportTab('resumen')">📊 RESUMEN</button>
+                        <button class="tab-btn" onclick="showReportTab('ventas')">💰 VENTAS DIARIAS</button>
+                        <button class="tab-btn" onclick="showReportTab('clientes')">👥 CLIENTES Q1</button>
+                        <button class="tab-btn" onclick="showReportTab('auditoria')">📋 AUDITORÍA</button>
+                    </div>
+
+                    <!-- RESUMEN -->
+                    <div id="report-resumen" class="report-section">
+                        <div class="admin-grid" style="margin-top: 1rem; margin-bottom: 2rem;">
+                            <div class="stat-card animate-glow">
+                                <h3>VENTAS HOY</h3>
+                                <div class="number" id="salesToday">$0</div>
+                            </div>
+                            <div class="stat-card animate-glow">
+                                <h3>TICKET PROMEDIO</h3>
+                                <div class="number" id="avgOrder">$0</div>
+                            </div>
+                            <div class="stat-card danger animate-glow">
+                                <h3>ÓRDENES PENDIENTES</h3>
+                                <div class="number" id="pendingCount">0</div>
+                            </div>
+                        </div>
+
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 2rem; margin-bottom: 2rem;">
+                            <div class="table-container animate-glow">
+                                <h3 style="color: var(--neon-pink); padding: 1rem; font-family: 'Orbitron', sans-serif;">PLATILLOS MÁS VENDIDOS</h3>
+                                <div style="position: relative; height: 300px; padding: 1rem;">
+                                    <canvas id="topDishesChart"></canvas>
+                                </div>
+                            </div>
+
+                            <div class="table-container animate-glow">
+                                <h3 style="color: var(--neon-cyan); padding: 1rem; font-family: 'Orbitron', sans-serif;">ESTADO DE ÓRDENES</h3>
+                                <div style="position: relative; height: 300px; padding: 1rem;">
+                                    <canvas id="ordersStatusChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="table-container animate-glow">
+                            <h3 style="color: var(--neon-green); padding: 1rem; font-family: 'Orbitron', sans-serif;">VENTAS POR PLATAFORMA</h3>
+                            <div style="position: relative; height: 300px; padding: 1rem;">
+                                <canvas id="platformSalesChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- VENTAS DIARIAS -->
+                    <div id="report-ventas" class="report-section" style="display: none;">
+                        <h3 style="color: var(--neon-cyan); margin-bottom: 1rem; font-family: 'Orbitron', sans-serif;">💰 VENTAS DIARIAS</h3>
+                        <p style="color: var(--text-secondary); margin-bottom: 1rem;">Calendario para elegir un día y ver el desgloses y la suma total de ingresos</p>
+                        
+                        <div class="form-group" style="max-width: 300px;">
+                            <label style="color: var(--neon-cyan);">Selecciona una fecha:</label>
+                            <input type="date" id="ventasDate" onchange="loadVentasDiarias()">
+                        </div>
+
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; margin-top: 1.5rem;">
+                            <div class="table-container animate-glow">
+                                <h3 style="color: var(--neon-pink); padding: 1rem; font-family: 'Orbitron', sans-serif;">VENTAS DEL DÍA</h3>
+                                <div style="position: relative; height: 300px; padding: 1rem;">
+                                    <canvas id="ventasDiariaChart"></canvas>
+                                </div>
+                            </div>
+
+                            <div class="table-container animate-glow">
+                                <h3 style="color: var(--neon-green); padding: 1rem; font-family: 'Orbitron', sans-serif;">RESUMEN</h3>
+                                <div style="padding: 2rem;">
+                                    <div class="cart-summary">
+                                        <div class="summary-row">
+                                            <span>TOTAL INGRESOS:</span>
+                                            <span id="totalVentasDia" style="color: var(--neon-green); font-weight: bold;">$0.00</span>
+                                        </div>
+                                        <div class="summary-row">
+                                            <span>CANTIDAD DE ÓRDENES:</span>
+                                            <span id="cantOrdenesDia" style="color: var(--neon-cyan); font-weight: bold;">0</span>
+                                        </div>
+                                        <div class="summary-row">
+                                            <span>TICKET PROMEDIO:</span>
+                                            <span id="ticketPromedioDia" style="color: var(--neon-orange); font-weight: bold;">$0.00</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="table-container animate-glow" style="margin-top: 2rem;">
+                            <h3 style="color: var(--neon-cyan); padding: 1rem; font-family: 'Orbitron', sans-serif;">ÓRDENES DEL DÍA</h3>
+                            <table id="ventasTable">
+                                <thead>
+                                    <tr>
+                                        <th>ID ORDEN</th>
+                                        <th>CLIENTE</th>
+                                        <th>ESTADO</th>
+                                        <th>TOTAL</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="ventasTableBody">
+                                    <tr>
+                                        <td colspan="4" style="text-align: center; color: var(--text-secondary);">SELECCIONA UNA FECHA</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- CLIENTES Q1 -->
+                    <div id="report-clientes" class="report-section" style="display: none;">
+                        <h3 style="color: var(--neon-cyan); margin-bottom: 1rem; font-family: 'Orbitron', sans-serif;">👥 CLIENTES VIGENTES Q1</h3>
+                        <p style="color: var(--text-secondary); margin-bottom: 1rem;">Botón para generar el reporte de clientes activos en el primer trimestre</p>
+                        
+                        <div style="display: flex; gap: 1rem; align-items: flex-end; margin-bottom: 1.5rem;">
+                            <div class="form-group" style="max-width: 300px; margin-bottom: 0;">
+                                <label style="color: var(--neon-cyan);">Selecciona un año:</label>
+                                <input type="number" id="yearQ1" placeholder="2024" min="2000" max="2099" value="2026">
+                            </div>
+                            <button class="btn btn-pink" onclick="loadClientesQ1()" style="padding: 0.8rem 1.5rem;">GENERAR REPORTE Q1</button>
+                        </div>
+
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; margin-bottom: 2rem;">
+                            <div class="table-container animate-glow">
+                                <h3 style="color: var(--neon-green); padding: 1rem; font-family: 'Orbitron', sans-serif;">DISTRIBUCIÓN</h3>
+                                <div style="position: relative; height: 300px; padding: 1rem;">
+                                    <canvas id="clientesQ1Chart"></canvas>
+                                </div>
+                            </div>
+
+                            <div class="table-container animate-glow">
+                                <h3 style="color: var(--neon-cyan); padding: 1rem; font-family: 'Orbitron', sans-serif;">ESTADÍSTICAS</h3>
+                                <div style="padding: 2rem;">
+                                    <div class="cart-summary">
+                                        <div class="summary-row">
+                                            <span>CLIENTES ENCONTRADOS:</span>
+                                            <span id="clientesQ1Count" style="color: var(--neon-green); font-weight: bold;">0</span>
+                                        </div>
+                                        <div class="summary-row">
+                                            <span>PERÍODO:</span>
+                                            <span id="periodoQ1" style="color: var(--neon-cyan); font-weight: bold;">ENE - MAR</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="table-container animate-glow">
+                            <h3 style="color: var(--neon-pink); padding: 1rem; font-family: 'Orbitron', sans-serif;">LISTADO COMPLETO</h3>
+                            <table id="clientesQ1Table">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>NOMBRE</th>
+                                        <th>TELÉFONO</th>
+                                        <th>CORREO</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="clientesQ1TableBody">
+                                    <tr>
+                                        <td colspan="4" style="text-align: center; color: var(--text-secondary);">SIN DATOS</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- AUDITORÍA -->
+                    <div id="report-auditoria" class="report-section" style="display: none;">
+                        <h3 style="color: var(--neon-cyan); margin-bottom: 1rem; font-family: 'Orbitron', sans-serif;">📋 AUDITORÍA (SEGUIMIENTO DE CLIENTES)</h3>
+                        <p style="color: var(--text-secondary); margin-bottom: 1rem;">Tabla de solo lectura que muestra los registros de la tabla Seguimiento_Clientes generados por el trigger</p>
+                        
+                        <div class="table-container animate-glow" style="margin-bottom: 2rem;">
+                            <h3 style="color: var(--neon-pink); padding: 1rem; font-family: 'Orbitron', sans-serif;">ACTIVIDAD DE CLIENTES</h3>
+                            <div style="position: relative; height: 300px; padding: 1rem;">
+                                <canvas id="auditActivityChart"></canvas>
+                            </div>
+                        </div>
+
+                        <div class="table-container animate-glow">
+                            <h3 style="color: var(--neon-cyan); padding: 1rem; font-family: 'Orbitron', sans-serif;">REGISTROS DE AUDITORÍA</h3>
+                            <table id="auditTable">
+                                <thead>
+                                    <tr>
+                                        <th>ID SEGUIMIENTO</th>
+                                        <th>CLIENTE</th>
+                                        <th>FECHA/HORA</th>
+                                        <th>ID PEDIDO</th>
+                                        <th>PLATAFORMA</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="auditTableBody"></tbody>
+                            </table>
+                        </div>
+
+                        <div style="margin-top: 1.5rem; color: var(--text-secondary); font-size: 0.85rem; padding: 1rem; background: rgba(0, 245, 255, 0.05); border-left: 3px solid var(--neon-cyan); border-radius: 0.3rem;">
+                            <strong>ℹ️ Nota:</strong> Esta tabla es de solo lectura y se actualiza automáticamente cuando se crea una nueva orden (trigger automático)
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- LOGIN ADMIN MODAL -->
+    <!-- MODAL LOGIN ADMIN -->
+    <div class="modal" id="adminLoginModal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="document.getElementById('adminLoginModal').classList.remove('show')">✕</button>
+            <div class="modal-header" style="text-align: center; margin-bottom: 2rem;">
+                🔐 ACCESO ADMIN
+            </div>
+            <div class="form-group">
+                <label style="color: var(--neon-cyan);">CONTRASEÑA DE ADMIN</label>
+                <input type="password" id="adminPassword" placeholder="Ingresa la contraseña" onkeypress="if(event.key === 'Enter') validateAdminPassword()">
+            </div>
+            <div style="display: flex; gap: 1rem;">
+                <button class="btn btn-pink" onclick="validateAdminPassword()" style="flex: 1; padding: 0.8rem;">ENTRAR</button>
+                <button class="btn" onclick="document.getElementById('adminLoginModal').classList.remove('show')" style="flex: 1; padding: 0.8rem;">CANCELAR</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="dishModal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeDishModal()">✕</button>
+            <div class="modal-header">NUEVO PLATILLO</div>
+            <div class="form-group">
+                <label>NOMBRE</label>
+                <input type="text" id="dishName" placeholder="Nombre del platillo">
+            </div>
+            <div class="form-group">
+                <label>PRECIO VENTA</label>
+                <input type="number" id="dishPrice" placeholder="Precio" step="0.01">
+            </div>
+            <div class="form-group">
+                <label>COSTO PREPARACIÓN</label>
+                <input type="number" id="dishCost" placeholder="Costo" step="0.01">
+            </div>
+            <button class="btn btn-pink" onclick="saveDish()" style="width: 100%; padding: 0.8rem; margin-top: 1rem;">GUARDAR</button>
+        </div>
+    </div>
+
+    <div class="modal" id="clientModal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeClientModal()">✕</button>
+            <div class="modal-header">NUEVO CLIENTE</div>
+            <div class="form-group">
+                <label>NOMBRE</label>
+                <input type="text" id="clientName" placeholder="Nombre completo">
+            </div>
+            <div class="form-group">
+                <label>TELÉFONO</label>
+                <input type="tel" id="clientPhone" placeholder="Teléfono">
+            </div>
+            <div class="form-group">
+                <label>CORREO</label>
+                <input type="email" id="clientEmail" placeholder="Correo">
+            </div>
+            <div class="form-group">
+                <label>DIRECCIÓN</label>
+                <input type="text" id="clientAddress" placeholder="Dirección">
+            </div>
+            <button class="btn btn-pink" onclick="saveClient()" style="width: 100%; padding: 0.8rem; margin-top: 1rem;">GUARDAR</button>
+        </div>
+    </div>
+
+    <div class="modal" id="orderDetailModal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeOrderDetail()">✕</button>
+            <div class="modal-header">DETALLES DEL PEDIDO</div>
+            <div id="orderDetailContent"></div>
+            <div style="margin-top: 1.5rem; display: flex; gap: 1rem;">
+                <button class="btn" onclick="updateOrderStatus('En preparación')" style="flex: 1;">PREPARANDO</button>
+                <button class="btn btn-pink" onclick="updateOrderStatus('Entregado')" style="flex: 1;">ENTREGADO</button>
+            </div>
+        </div>
+    </div>
+
+
+
+    <script>
+        // ==================== CONFIGURACIÓN API ====================
+        const API_URL = 'http://localhost:3000/api';
+        
+        // ==================== DATOS ====================
+        const mockDishes = [
+            { id: 1, nombre: 'Hamburguesa Clásica', precio: 120, costo: 45 },
+            { id: 2, nombre: 'Pizza Pepperoni', precio: 180, costo: 70 },
+            { id: 3, nombre: 'Alitas BBQ (10 pz)', precio: 150, costo: 60 },
+            { id: 4, nombre: 'Papas Fritas', precio: 50, costo: 15 },
+            { id: 5, nombre: 'Refresco (500ml)', precio: 35, costo: 10 },
+            { id: 6, nombre: 'Tacos al Pastor (3)', precio: 80, costo: 30 },
+            { id: 7, nombre: 'Sushi Roll', precio: 160, costo: 65 },
+            { id: 8, nombre: 'Quesadilla', precio: 90, costo: 35 }
+        ];
+
+        const mockClients = [
+            { id: 1, nombre: 'Oscar Ruben', telefono: '5588705576', correo: 'oz@email.com', direccion: 'Privada 140' },
+            { id: 2, nombre: 'Luis Vidal', telefono: '5565026767', correo: 'luis@email.com', direccion: 'Av. Independencia' },
+            { id: 3, nombre: 'Ana Martinez', telefono: '5549248723', correo: 'ana@email.com', direccion: 'Calzada 911' }
+        ];
+
+        let cart = [];
+        let allOrders = [];
+        let currentOrderId = null;
+        let currentUser = { name: 'Usuario', role: 'CLIENTE' };
+        let currentPlatformCommission = 0;
+        const ADMIN_PASSWORD = 'jokerpoker123'; // Contraseña admin
+        let isAdminAuthenticated = false;
+
+        // ==================== CONEXIÓN CON EL SERVIDOR ====================
+        let serverIsUp = null; // null = aún no se sabe, true/false después del primer chequeo
+
+        function setConnUI(state) {
+            const box = document.getElementById('connStatus');
+            const label = document.getElementById('connLabel');
+            const banner = document.getElementById('offlineBanner');
+            box.classList.remove('ok', 'bad');
+
+            if (state === 'ok') {
+                box.classList.add('ok');
+                label.textContent = 'Servidor OK';
+                banner.classList.remove('show');
+            } else if (state === 'bad') {
+                box.classList.add('bad');
+                label.textContent = 'Sin conexión';
+                banner.classList.add('show');
+            } else {
+                label.textContent = 'Conectando...';
+            }
+        }
+
+        async function checkConnection(showFeedback = false) {
+            try {
+                const controller = new AbortController();
+                const timeout = setTimeout(() => controller.abort(), 4000);
+                const res = await fetch(`${API_URL}/health`, { signal: controller.signal });
+                clearTimeout(timeout);
+
+                if (!res.ok) throw new Error('Respuesta no OK');
+
+                const wasDown = serverIsUp === false;
+                serverIsUp = true;
+                setConnUI('ok');
+
+                if (showFeedback || wasDown) {
+                    showToast('success', '✅', 'Conectado con el servidor y la base de datos.');
+                    if (wasDown) renderMenuGrid(); // recarga datos reales al recuperar conexión
+                }
+            } catch (error) {
+                serverIsUp = false;
+                setConnUI('bad');
+                if (showFeedback) {
+                    showToast('error', '🔌', 'No se pudo contactar al servidor. Revisa que "node server.js" esté corriendo y que MySQL esté activo.');
+                }
+            }
+        }
+
+        // ==================== TOASTS ====================
+        function showToast(type, icon, message) {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `<span class="toast-icon">${icon}</span><span>${message}</span>`;
+            container.appendChild(toast);
+            setTimeout(() => toast.remove(), 4600);
+        }
+
+        // ==================== INIT ====================
+        window.addEventListener('load', () => {
+            initializeUser();
+            checkConnection();
+            setInterval(() => checkConnection(false), 8000); // monitoreo continuo cada 8s
+            renderMenuGrid();
+        });
+
+        function initializeUser() {
+            currentUser = { 
+                name: 'Usuario_' + Math.random().toString(36).substr(2, 9).toUpperCase(), 
+                role: 'CLIENTE' 
+            };
+            document.getElementById('userName').textContent = currentUser.name;
+        }
+
+        // ==================== NAVIGATION ====================
+        function goHome() {
+            showSection('cliente');
+        }
+
+        function logout() {
+            cart = [];
+            allOrders = [];
+            initializeUser();
+            showSection('cliente');
+            renderMenuGrid();
+            updateCartDisplay();
+            alert('SESIÓN CERRADA');
+        }
+
+        function showSection(id) {
+            console.log('Mostrando sección:', id);
+            
+            // Ocultar todas las secciones
+            document.querySelectorAll('.section').forEach(s => {
+                s.classList.remove('active');
+                s.style.display = 'none';
+            });
+            
+            // Mostrar la sección solicitada
+            const section = document.getElementById(id);
+            if (section) {
+                section.classList.add('active');
+                section.style.display = 'block';
+                console.log('✅ Sección activada:', id);
+            } else {
+                console.error('❌ Sección no encontrada:', id);
+            }
+        }
+
+        function toggleAdminPanel() {
+            // Si ya está autenticado, permitir salir
+            if (isAdminAuthenticated) {
+                isAdminAuthenticated = false;
+                currentUser.role = 'CLIENTE';
+                document.querySelector('.user-role').textContent = 'CLIENTE';
+                document.getElementById('adminBtn').classList.remove('active');
+                showSection('cliente');
+                return;
+            }
+
+            // Si no está autenticado, pedir contraseña
+            document.getElementById('adminPassword').value = '';
+            document.getElementById('adminLoginModal').classList.add('show');
+        }
+
+        function handlePasswordEnter(event) {
+            if (event.key === 'Enter') {
+                validateAdminPassword();
+            }
+        }
+
+        function validateAdminPassword() {
+            const password = document.getElementById('adminPassword').value;
+            
+            if (password === ADMIN_PASSWORD) {
+                console.log('✅ Contraseña correcta, abriendo panel admin...');
+                
+                isAdminAuthenticated = true;
+                currentUser.role = 'ADMIN';
+                
+                // Actualizar UI inmediatamente
+                document.querySelector('.user-role').textContent = 'ADMIN';
+                document.getElementById('adminBtn').classList.add('active');
+                document.getElementById('adminLoginModal').classList.remove('show');
+                
+                // Cerrar el modal
+                setTimeout(() => {
+                    console.log('Cerrando modal...');
+                    // Ocultar todas las secciones
+                    document.querySelectorAll('.section').forEach(s => {
+                        s.classList.remove('active');
+                        s.style.display = 'none';
+                    });
+                    
+                    // Mostrar sección admin
+                    const adminSection = document.getElementById('admin');
+                    if (adminSection) {
+                        adminSection.classList.add('active');
+                        adminSection.style.display = 'block';
+                        console.log('✅ Panel admin visible');
+                        
+                        // Cargar datos reales desde el servidor
+                        loadAdminData()
+                            .then(() => {
+                                renderAdminStats();
+                                renderOrdersKanban();
+                                renderDishTable();
+                                renderClientTable();
+                                renderReports();
+                                console.log('✅ Datos cargados');
+                            })
+                            .catch(error => console.error('Error cargando datos:', error));
+                    } else {
+                        console.error('❌ No se encontró sección admin');
+                    }
+                }, 50);
+            } else {
+                alert('❌ CONTRASEÑA INCORRECTA');
+                document.getElementById('adminPassword').value = '';
+            }
+        }
+
+        // ==================== CLIENTE - MENÚ ====================
+        function renderMenuGrid() {
+            const grid = document.getElementById('menuGrid');
+
+            // Skeleton mientras esperamos la respuesta del API
+            grid.innerHTML = Array.from({ length: 6 }).map(() => '<div class="skeleton-card"></div>').join('');
+
+            fetch(`${API_URL}/platillos`)
+                .then(res => {
+                    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                    return res.json();
+                })
+                .then(dishes => {
+                    serverIsUp = true;
+                    setConnUI('ok');
+
+                    // Guardar en mockDishes para compatibilidad
+                    mockDishes.length = 0;
+                    dishes.forEach(dish => {
+                        mockDishes.push({
+                            id: dish.id_platillo,
+                            nombre: dish.nombre,
+                            precio: dish.precio,
+                            costo: dish.costo_preparacion
+                        });
+                    });
+
+                    grid.innerHTML = mockDishes.map((dish, i) => `
+                        <div class="menu-item" style="animation-delay: ${i * 0.06}s">
+                            <h3>${dish.nombre}</h3>
+                            <div class="price">$${dish.precio.toFixed(2)}</div>
+                            <div class="cost">COSTO: $${dish.costo.toFixed(2)}</div>
+                            <div class="quantity-control">
+                                <button onclick="addToCart(${dish.id}, -1)">−</button>
+                                <input type="number" id="qty-${dish.id}" value="0" min="0" readonly>
+                                <button onclick="addToCart(${dish.id}, 1)">+</button>
+                            </div>
+                        </div>
+                    `).join('');
+                })
+                .catch(error => {
+                    console.error('Error cargando platillos:', error);
+                    serverIsUp = false;
+                    setConnUI('bad');
+                    grid.innerHTML = '<div class="empty-state" style="grid-column: 1/-1;"><p>⚠️ ERROR AL CARGAR PLATILLOS</p><p style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.5rem;">Verifica que el servidor (node server.js) y MySQL estén corriendo, y que la base de datos DarkKitchen exista.</p><button class="btn" style="margin-top: 1rem;" onclick="renderMenuGrid()">REINTENTAR</button></div>';
+                });
+        }
+
+        function addToCart(dishId, change) {
+            const qtyInput = document.getElementById(`qty-${dishId}`);
+            let qty = parseInt(qtyInput.value) + change;
+            qty = Math.max(0, qty);
+            qtyInput.value = qty;
+
+            if (qty > 0) {
+                const dish = mockDishes.find(d => d.id === dishId);
+                const existing = cart.find(c => c.id === dishId);
+                if (existing) {
+                    existing.quantity = qty;
+                } else {
+                    cart.push({ ...dish, quantity: qty });
+                }
+            } else {
+                cart = cart.filter(c => c.id !== dishId);
+            }
+
+            updateCartDisplay();
+        }
+
+        function updateCartDisplay() {
+            const cartItemsDiv = document.getElementById('cartItems');
+            const cartSummary = document.getElementById('cartSummary');
+            
+            if (cart.length === 0) {
+                cartItemsDiv.innerHTML = '<div class="empty-state"><p>CARRITO VACÍO</p></div>';
+                cartSummary.style.display = 'none';
+                return;
+            }
+
+            const subtotal = cart.reduce((sum, item) => sum + (item.precio * item.quantity), 0);
+            const commission = subtotal * (currentPlatformCommission / 100);
+            const total = subtotal + commission;
+
+            cartItemsDiv.innerHTML = cart.map(item => `
+                <div class="cart-item">
+                    <div class="cart-item-info">
+                        <div class="cart-item-name">${item.nombre}</div>
+                        <div class="cart-item-detail">${item.quantity} x $${item.precio.toFixed(2)}</div>
+                    </div>
+                    <div class="cart-item-total">$${(item.precio * item.quantity).toFixed(2)}</div>
+                    <button class="remove-btn" onclick="removeFromCart(${item.id})">QUITAR</button>
+                </div>
+            `).join('');
+
+            document.getElementById('subtotal').textContent = `$${subtotal.toFixed(2)}`;
+            document.getElementById('commission').textContent = `$${commission.toFixed(2)}`;
+            document.getElementById('total').textContent = `$${total.toFixed(2)}`;
+            cartSummary.style.display = 'block';
+        }
+
+        function removeFromCart(dishId) {
+            cart = cart.filter(item => item.id !== dishId);
+            document.getElementById(`qty-${dishId}`).value = 0;
+            updateCartDisplay();
+        }
+
+        function showCheckout() {
+            if (cart.length === 0) {
+                alert('CARRITO VACÍO');
+                return;
+            }
+            
+            const subtotal = cart.reduce((sum, item) => sum + (item.precio * item.quantity), 0);
+            document.getElementById('checkoutSubtotal').textContent = `$${subtotal.toFixed(2)}`;
+            updateCheckoutTotal();
+            showSection('checkout');
+        }
+
+        function updateCheckoutTotal() {
+            const platform = document.getElementById('checkoutPlatform').value;
+            const commissions = { '1': 30, '2': 25, '3': 28, '4': 0, '5': 2 };
+            
+            currentPlatformCommission = commissions[platform] || 0;
+            const subtotal = cart.reduce((sum, item) => sum + (item.precio * item.quantity), 0);
+            const commission = subtotal * (currentPlatformCommission / 100);
+            const total = subtotal + commission;
+
+            document.getElementById('checkoutCommission').textContent = `$${commission.toFixed(2)}`;
+            document.getElementById('checkoutTotal').textContent = `$${total.toFixed(2)}`;
+        }
+
+        function submitOrder() {
+            const name = document.getElementById('checkoutName').value;
+            const phone = document.getElementById('checkoutPhone').value;
+            const email = document.getElementById('checkoutEmail').value;
+            const address = document.getElementById('checkoutAddress').value;
+            const platform = document.getElementById('checkoutPlatform').value;
+
+            if (!name || !phone || !email || !address || !platform) {
+                alert('COMPLETA TODOS LOS CAMPOS');
+                return;
+            }
+
+            const subtotal = cart.reduce((sum, item) => sum + (item.precio * item.quantity), 0);
+            const commission = subtotal * (currentPlatformCommission / 100);
+            const total = subtotal + commission;
+
+            // Primero crear el cliente
+            fetch(`${API_URL}/clientes`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    nombre: name,
+                    telefono: phone,
+                    correo: email,
+                    direccion: address
+                })
+            })
+            .then(res => res.json())
+            .then(clientData => {
+                const idCliente = clientData.id || 1;
+
+                // Luego crear el pedido
+                return fetch(`${API_URL}/pedidos`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        id_cliente: idCliente,
+                        id_plataforma: platform,
+                        items: cart.map(item => ({
+                            id_platillo: item.id,
+                            cantidad: item.quantity,
+                            precio_unitario: item.precio
+                        })),
+                        total: total
+                    })
+                });
+            })
+            .then(res => res.json())
+            .then(orderData => {
+                cart = [];
+                document.querySelectorAll('.menu-item input').forEach(input => input.value = 0);
+                
+                showToast('success', '🎉', `¡Pedido confirmado! ID #${orderData.id}`);
+                showSection('cliente');
+                updateCartDisplay();
+            })
+            .catch(error => {
+                console.error('Error al crear pedido:', error);
+                serverIsUp = false;
+                setConnUI('bad');
+                showToast('error', '❌', 'No se pudo crear el pedido. Verifica que el servidor esté corriendo.');
+            });
+        }
+
+        // ==================== ADMIN ====================
+        // Trae los pedidos reales desde la base de datos y llena allOrders
+        async function loadAdminData() {
+            try {
+                const res = await fetch(`${API_URL}/pedidos`);
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                const pedidos = await res.json();
+
+                allOrders = pedidos.map(p => ({
+                    id: p.id_pedido,
+                    cliente: p.cliente_nombre,
+                    telefono: p.telefono,
+                    correo: p.correo,
+                    direccion: p.direccion,
+                    plataforma: p.plataforma_nombre,
+                    id_plataforma: p.id_plataforma,
+                    total: Number(p.total) || 0,
+                    estado: p.estado,
+                    fecha: p.fecha
+                }));
+
+                serverIsUp = true;
+                setConnUI('ok');
+            } catch (error) {
+                console.error('Error cargando pedidos:', error);
+                allOrders = [];
+                serverIsUp = false;
+                setConnUI('bad');
+                showToast('error', '❌', 'No se pudieron cargar los pedidos desde el servidor.');
+            }
+        }
+
+        function renderAdminStats() {
+            const total = allOrders.length;
+            const revenue = allOrders.reduce((sum, o) => sum + (o.total || 0), 0);
+            const pending = allOrders.filter(o => o.estado === 'Pendiente').length;
+            const preparing = allOrders.filter(o => o.estado === 'En preparación').length;
+
+            try {
+                document.getElementById('statsGrid').innerHTML = `
+                    <div class="stat-card">
+                        <h3>ÓRDENES TOTALES</h3>
+                        <div class="number">${total}</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>INGRESOS</h3>
+                        <div class="number">$${revenue.toFixed(0)}</div>
+                    </div>
+                    <div class="stat-card danger">
+                        <h3>PENDIENTES</h3>
+                        <div class="number">${pending}</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>PREPARANDO</h3>
+                        <div class="number">${preparing}</div>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Error en renderAdminStats:', error);
+            }
+        }
+
+        function renderOrdersKanban() {
+            const statuses = ['Pendiente', 'En preparación', 'Entregado'];
+            const statusIds = ['pendiente', 'preparacion', 'entregado'];
+
+            statuses.forEach((status, idx) => {
+                try {
+                    const orders = allOrders.filter(o => o.estado === status);
+                    const container = document.getElementById(`kanban-${statusIds[idx]}`);
+
+                    if (!container) return;
+
+                    if (orders.length === 0) {
+                        container.innerHTML = '<div class="empty-state" style="padding: 1rem; font-size: 0.8rem;">SIN ÓRDENES</div>';
+                        return;
+                    }
+
+                    container.innerHTML = orders.map(order => `
+                        <div class="kanban-card" onclick="showOrderDetail(${order.id})">
+                            <div style="color: var(--neon-cyan); font-weight: bold; margin-bottom: 0.5rem;">ORDEN #${order.id}</div>
+                            <div style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.3rem;">${order.cliente || 'Cliente'}</div>
+                            <div style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.5rem;">${order.plataforma || ''}</div>
+                            <div style="color: var(--neon-green); font-weight: bold; font-size: 0.95rem;">$${(order.total || 0).toFixed(2)}</div>
+                        </div>
+                    `).join('');
+                } catch (error) {
+                    console.error(`Error en renderOrdersKanban para ${status}:`, error);
+                }
+            });
+        }
+
+        function showOrderDetail(orderId) {
+            const order = allOrders.find(o => o.id === orderId);
+            if (!order) return;
+
+            currentOrderId = orderId;
+
+            const content = `
+                <div>
+                    <div style="margin-bottom: 1rem;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                            <span>CLIENTE:</span>
+                            <strong>${order.cliente || '—'}</strong>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                            <span>TELÉFONO:</span>
+                            <strong>${order.telefono || '—'}</strong>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                            <span>PLATAFORMA:</span>
+                            <strong>${order.plataforma || '—'}</strong>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                            <span>ESTADO:</span>
+                            <strong>${order.estado || '—'}</strong>
+                        </div>
+                    </div>
+                    <div style="background: rgba(0, 0, 0, 0.3); padding: 1rem; border-radius: 0.4rem; margin-bottom: 1rem;">
+                        <div style="margin-top: 0; padding-top: 0; display: flex; justify-content: space-between; color: var(--neon-cyan);">
+                            <span>TOTAL:</span>
+                            <span style="color: var(--neon-green); font-weight: bold;">$${(order.total || 0).toFixed(2)}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('orderDetailContent').innerHTML = content;
+            document.getElementById('orderDetailModal').classList.add('show');
+        }
+
+        function closeOrderDetail() {
+            document.getElementById('orderDetailModal').classList.remove('show');
+            currentOrderId = null;
+        }
+
+        function updateOrderStatus(newStatus) {
+            if (!currentOrderId) return;
+
+            fetch(`${API_URL}/pedidos/${currentOrderId}/estado`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ estado: newStatus })
+            })
+                .then(res => {
+                    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                    return res.json();
+                })
+                .then(() => {
+                    const order = allOrders.find(o => o.id === currentOrderId);
+                    if (order) order.estado = newStatus;
+                    renderOrdersKanban();
+                    renderAdminStats();
+                    closeOrderDetail();
+                    showToast('success', '✅', `Orden #${currentOrderId} actualizada a "${newStatus}"`);
+                })
+                .catch(error => {
+                    console.error('Error actualizando estado:', error);
+                    showToast('error', '❌', 'No se pudo actualizar el estado en el servidor.');
+                });
+        }
+
+        function renderDishTable() {
+            try {
+                const tbody = document.getElementById('dishTableBody');
+                if (!tbody) return;
+                
+                // Intentar cargar del API, si falla usar datos locales
+                fetch(`${API_URL}/platillos`)
+                    .then(res => res.json())
+                    .then(dishes => {
+                        if (!dishes || dishes.length === 0) throw new Error('Sin platillos');
+                        
+                        tbody.innerHTML = dishes.map(dish => {
+                            const ganancia = (dish.precio || 0) - (dish.costo_preparacion || 0);
+                            return `
+                                <tr>
+                                    <td>${dish.id_platillo || dish.id || '?'}</td>
+                                    <td>${dish.nombre || '?'}</td>
+                                    <td style="color: var(--neon-green);">$${(dish.precio || 0).toFixed(2)}</td>
+                                    <td>$${(dish.costo_preparacion || 0).toFixed(2)}</td>
+                                    <td style="color: var(--neon-green);">$${ganancia.toFixed(2)}</td>
+                                    <td>
+                                        <button class="btn" style="padding: 0.3rem 0.6rem; font-size: 0.7rem;" onclick="showEditDishModal(${dish.id_platillo || dish.id}, '${dish.nombre}', ${dish.precio}, ${dish.costo_preparacion})">EDITAR</button>
+                                    </td>
+                                </tr>
+                            `;
+                        }).join('');
+                    })
+                    .catch(error => {
+                        console.warn('API no disponible, usando datos locales:', error);
+                        // Usar datos locales si el API falla
+                        tbody.innerHTML = mockDishes.map(dish => {
+                            const ganancia = dish.precio - dish.costo;
+                            return `
+                                <tr>
+                                    <td>${dish.id}</td>
+                                    <td>${dish.nombre}</td>
+                                    <td style="color: var(--neon-green);">$${dish.precio.toFixed(2)}</td>
+                                    <td>$${dish.costo.toFixed(2)}</td>
+                                    <td style="color: var(--neon-green);">$${ganancia.toFixed(2)}</td>
+                                    <td>
+                                        <button class="btn" style="padding: 0.3rem 0.6rem; font-size: 0.7rem;" onclick="showEditDishModal(${dish.id}, '${dish.nombre}', ${dish.precio}, ${dish.costo})">EDITAR</button>
+                                    </td>
+                                </tr>
+                            `;
+                        }).join('');
+                    });
+            } catch (error) {
+                console.error('Error en renderDishTable:', error);
+            }
+        }
+
+        function renderClientTable() {
+            try {
+                const tbody = document.getElementById('clientTableBody');
+                if (!tbody) return;
+                
+                fetch(`${API_URL}/clientes`)
+                    .then(res => res.json())
+                    .then(clients => {
+                        if (!clients || clients.length === 0) throw new Error('Sin clientes');
+                        
+                        mockClients.length = 0;
+                        clients.forEach(c => {
+                            mockClients.push({
+                                id: c.id_cliente,
+                                nombre: c.nombre,
+                                telefono: c.telefono,
+                                correo: c.correo,
+                                direccion: c.direccion
+                            });
+                        });
+
+                        tbody.innerHTML = mockClients.map(client => `
+                            <tr>
+                                <td>${client.id}</td>
+                                <td style="color: var(--neon-cyan);">${client.nombre}</td>
+                                <td>${client.telefono}</td>
+                                <td>${client.correo}</td>
+                                <td>${client.direccion}</td>
+                            </tr>
+                        `).join('');
+                    })
+                    .catch(error => {
+                        console.warn('API no disponible, usando datos locales:', error);
+                        // Mostrar datos locales si API falla
+                        tbody.innerHTML = mockClients.map(client => `
+                            <tr>
+                                <td>${client.id}</td>
+                                <td style="color: var(--neon-cyan);">${client.nombre}</td>
+                                <td>${client.telefono}</td>
+                                <td>${client.correo}</td>
+                                <td>${client.direccion}</td>
+                            </tr>
+                        `).join('');
+                    });
+            } catch (error) {
+                console.error('Error en renderClientTable:', error);
+            }
+        }
+
+        async function renderReports() {
+            // KPIs de "ventas hoy" a partir de los pedidos ya cargados
+            const today = new Date().toISOString().split('T')[0];
+            const ordersToday = allOrders.filter(o => o.fecha && new Date(o.fecha).toISOString().split('T')[0] === today);
+            const revenueToday = ordersToday.reduce((sum, o) => sum + o.total, 0);
+            const avgOrder = ordersToday.length > 0 ? revenueToday / ordersToday.length : 0;
+            const pending = allOrders.filter(o => o.estado === 'Pendiente').length;
+
+            document.getElementById('salesToday').textContent = `$${revenueToday.toFixed(0)}`;
+            document.getElementById('avgOrder').textContent = `$${avgOrder.toFixed(0)}`;
+            document.getElementById('pendingCount').textContent = pending;
+
+            renderOrdersStatusChart();
+            renderPlatformSalesChart();
+            await renderTopDishesChart();
+            await renderAuditTable();
+        }
+
+        function destroyChart(canvas) {
+            if (canvas && canvas.chart) {
+                canvas.chart.destroy();
+                canvas.chart = null;
+            }
+        }
+
+        // Gráfico: Estado de Órdenes (a partir de allOrders)
+        function renderOrdersStatusChart() {
+            const canvas = document.getElementById('ordersStatusChart');
+            if (!canvas) return;
+            destroyChart(canvas);
+
+            const estados = ['Pendiente', 'En preparación', 'Entregado'];
+            const counts = estados.map(e => allOrders.filter(o => o.estado === e).length);
+
+            canvas.chart = new Chart(canvas, {
+                type: 'doughnut',
+                data: {
+                    labels: estados,
+                    datasets: [{
+                        data: counts,
+                        backgroundColor: ['rgba(255, 149, 0, 0.7)', 'rgba(0, 245, 255, 0.7)', 'rgba(57, 255, 20, 0.7)'],
+                        borderColor: ['#FF9500', '#00F5FF', '#39FF14'],
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { labels: { color: '#00F5FF', font: { family: "'Space Mono', monospace" } } }
+                    }
+                }
+            });
+        }
+
+        // Gráfico: Ventas por plataforma (a partir de allOrders)
+        function renderPlatformSalesChart() {
+            const canvas = document.getElementById('platformSalesChart');
+            if (!canvas) return;
+            destroyChart(canvas);
+
+            const totals = {};
+            allOrders.forEach(o => {
+                const key = o.plataforma || 'Sin plataforma';
+                totals[key] = (totals[key] || 0) + o.total;
+            });
+
+            const labels = Object.keys(totals);
+            const data = Object.values(totals);
+
+            canvas.chart = new Chart(canvas, {
+                type: 'bar',
+                data: {
+                    labels,
+                    datasets: [{
+                        label: 'Ventas ($)',
+                        data,
+                        backgroundColor: 'rgba(183, 0, 255, 0.6)',
+                        borderColor: 'rgba(183, 0, 255, 1)',
+                        borderWidth: 2,
+                        borderRadius: 5
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { beginAtZero: true, ticks: { color: '#00F5FF' }, grid: { color: 'rgba(0, 245, 255, 0.1)' } },
+                        x: { ticks: { color: '#00F5FF' }, grid: { display: false } }
+                    }
+                }
+            });
+        }
+
+        // Gráfico: Platillos más vendidos (vw_topplatillos)
+        async function renderTopDishesChart() {
+            const canvas = document.getElementById('topDishesChart');
+            if (!canvas) return;
+            destroyChart(canvas);
+
+            try {
+                const res = await fetch(`${API_URL}/reportes/platillos-top`);
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                const data = await res.json();
+                const top5 = data.slice(0, 5);
+
+                canvas.chart = new Chart(canvas, {
+                    type: 'bar',
+                    data: {
+                        labels: top5.map(d => d.nombre),
+                        datasets: [{
+                            label: 'Unidades vendidas',
+                            data: top5.map(d => Number(d.total_vendidos)),
+                            backgroundColor: 'rgba(255, 0, 110, 0.6)',
+                            borderColor: 'rgba(255, 0, 110, 1)',
+                            borderWidth: 2,
+                            borderRadius: 5
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: {
+                            y: { beginAtZero: true, ticks: { color: '#00F5FF' }, grid: { color: 'rgba(0, 245, 255, 0.1)' } },
+                            x: { ticks: { color: '#00F5FF' }, grid: { display: false } }
+                        }
+                    }
+                });
+            } catch (error) {
+                console.error('Error cargando platillos-top:', error);
+            }
+        }
+
+        function showAdminTab(tab) {
+            document.querySelectorAll('.admin-tab').forEach(t => t.style.display = 'none');
+            document.getElementById(`tab-${tab}`).style.display = 'block';
+            
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            event.target.classList.add('active');
+        }
+
+        function showReportTab(tab) {
+            document.querySelectorAll('.report-section').forEach(t => t.style.display = 'none');
+            document.getElementById(`report-${tab}`).style.display = 'block';
+            
+            const tabs = document.querySelectorAll('#tab-reportes .admin-tabs .tab-btn');
+            tabs.forEach((b, i) => {
+                const tabNames = ['resumen', 'ventas', 'clientes', 'auditoria'];
+                if (tabNames[i] === tab) {
+                    b.classList.add('active');
+                } else {
+                    b.classList.remove('active');
+                }
+            });
+        }
+
+        async function loadVentasDiarias() {
+            const fecha = document.getElementById('ventasDate').value;
+            if (!fecha) {
+                showToast('warning', '⚠️', 'Selecciona una fecha');
+                return;
+            }
+
+            const tbody = document.getElementById('ventasTableBody');
+            const ctx = document.getElementById('ventasDiariaChart');
+
+            try {
+                const res = await fetch(`${API_URL}/reportes/ventas-diarias/${fecha}`);
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                const data = await res.json();
+                const pedidosDia = data.pedidos || [];
+                const totalVentas = Number(data.total_ventas) || 0;
+
+                if (pedidosDia.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: var(--text-secondary);">SIN ÓRDENES EN ESTA FECHA</td></tr>';
+                    document.getElementById('totalVentasDia').textContent = '$0.00';
+                    document.getElementById('cantOrdenesDia').textContent = '0';
+                    document.getElementById('ticketPromedioDia').textContent = '$0.00';
+                    destroyChart(ctx);
+                    return;
+                }
+
+                const ticketPromedio = totalVentas / pedidosDia.length;
+
+                // El SP no devuelve el nombre del cliente; lo tomamos de los pedidos ya cargados en el panel
+                tbody.innerHTML = pedidosDia.map(order => {
+                    const match = allOrders.find(o => o.id === order.id_pedido);
+                    const estadoClase = (order.estado || '').toLowerCase().replace(' ', '-');
+                    return `
+                        <tr>
+                            <td style="color: var(--neon-cyan);">#${order.id_pedido}</td>
+                            <td>${match ? match.cliente : '—'}</td>
+                            <td><span class="status-badge status-${estadoClase}">${order.estado}</span></td>
+                            <td style="color: var(--neon-green);">$${Number(order.total).toFixed(2)}</td>
+                        </tr>
+                    `;
+                }).join('');
+
+                document.getElementById('totalVentasDia').textContent = `$${totalVentas.toFixed(2)}`;
+                document.getElementById('cantOrdenesDia').textContent = pedidosDia.length;
+                document.getElementById('ticketPromedioDia').textContent = `$${ticketPromedio.toFixed(2)}`;
+
+                destroyChart(ctx);
+                if (!ctx) return;
+
+                ctx.chart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: pedidosDia.map(o => `Orden #${o.id_pedido}`),
+                        datasets: [{
+                            label: 'Monto de Orden ($)',
+                            data: pedidosDia.map(o => Number(o.total)),
+                            backgroundColor: [
+                                'rgba(0, 245, 255, 0.6)',
+                                'rgba(255, 0, 110, 0.6)',
+                                'rgba(183, 0, 255, 0.6)',
+                                'rgba(57, 255, 20, 0.6)',
+                                'rgba(255, 149, 0, 0.6)',
+                            ],
+                            borderColor: [
+                                'rgba(0, 245, 255, 1)',
+                                'rgba(255, 0, 110, 1)',
+                                'rgba(183, 0, 255, 1)',
+                                'rgba(57, 255, 20, 1)',
+                                'rgba(255, 149, 0, 1)',
+                            ],
+                            borderWidth: 2,
+                            borderRadius: 5,
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        indexAxis: 'x',
+                        plugins: {
+                            legend: {
+                                labels: {
+                                    color: '#00F5FF',
+                                    font: { family: "'Orbitron', sans-serif", size: 11 }
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                grid: {
+                                    color: 'rgba(0, 245, 255, 0.1)',
+                                    drawBorder: true,
+                                    borderColor: 'rgba(0, 245, 255, 0.3)'
+                                },
+                                ticks: {
+                                    color: '#00F5FF',
+                                    font: { family: "'Space Mono', monospace" },
+                                    callback: function(value) {
+                                        return '$' + value;
+                                    }
+                                }
+                            },
+                            x: {
+                                grid: {
+                                    display: false
+                                },
+                                ticks: {
+                                    color: '#00F5FF',
+                                    font: { family: "'Space Mono', monospace", size: 10 }
+                                }
+                            }
+                        }
+                    }
+                });
+            } catch (error) {
+                console.error('Error cargando ventas diarias:', error);
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: var(--text-secondary);">ERROR AL CONSULTAR EL SERVIDOR</td></tr>';
+                showToast('error', '❌', 'No se pudo generar el reporte de ventas diarias.');
+            }
+        }
+
+        async function loadClientesQ1() {
+            const year = parseInt(document.getElementById('yearQ1').value);
+            if (!year || year < 2000 || year > 2099) {
+                showToast('warning', '⚠️', 'Ingresa un año válido');
+                return;
+            }
+
+            const tbody = document.getElementById('clientesQ1TableBody');
+
+            try {
+                const res = await fetch(`${API_URL}/reportes/clientes-vigentes/${year}`);
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                const clientesQ1 = await res.json();
+
+                if (!clientesQ1 || clientesQ1.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: var(--text-secondary);">SIN CLIENTES EN Q1 ' + year + '</td></tr>';
+                    document.getElementById('clientesQ1Count').textContent = '0';
+                    return;
+                }
+
+                tbody.innerHTML = clientesQ1.map((client, idx) => `
+                    <tr>
+                        <td style="color: var(--neon-cyan);">${idx + 1}</td>
+                        <td>${client.nombre}</td>
+                        <td>${client.telefono}</td>
+                        <td>${client.correo}</td>
+                    </tr>
+                `).join('');
+
+                document.getElementById('clientesQ1Count').textContent = clientesQ1.length;
+            } catch (error) {
+                console.error('Error cargando clientes Q1:', error);
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: var(--text-secondary);">ERROR AL CONSULTAR EL SERVIDOR</td></tr>';
+                showToast('error', '❌', 'No se pudo generar el reporte de clientes Q1.');
+            }
+        }
+
+        async function renderAuditTable() {
+            const tbody = document.getElementById('auditTableBody');
+            if (!tbody) return;
+
+            try {
+                const res = await fetch(`${API_URL}/reportes/auditoria`);
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                const auditData = await res.json();
+
+                if (!auditData || auditData.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--text-secondary);">SIN REGISTROS DE AUDITORÍA</td></tr>';
+                    destroyChart(document.getElementById('auditActivityChart'));
+                    return;
+                }
+
+                tbody.innerHTML = auditData.map(audit => `
+                    <tr>
+                        <td style="color: var(--neon-cyan);">#${audit.id_seguimiento}</td>
+                        <td>${audit.nombre_cliente || '—'}</td>
+                        <td style="font-size: 0.85rem; color: var(--text-secondary);">${new Date(audit.fecha_hora).toLocaleString()}</td>
+                        <td style="color: var(--neon-green);">#${audit.id_pedido}</td>
+                        <td>${audit.plataforma || '—'}</td>
+                    </tr>
+                `).join('');
+
+                renderAuditActivityChart(auditData);
+            } catch (error) {
+                console.error('Error cargando auditoría:', error);
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--text-secondary);">ERROR AL CONSULTAR EL SERVIDOR</td></tr>';
+            }
+        }
+
+        // Gráfico: actividad de clientes por día (tabla Seguimiento_Clientes)
+        function renderAuditActivityChart(auditData) {
+            const canvas = document.getElementById('auditActivityChart');
+            if (!canvas) return;
+            destroyChart(canvas);
+
+            const perDia = {};
+            auditData.forEach(a => {
+                const dia = new Date(a.fecha_hora).toISOString().split('T')[0];
+                perDia[dia] = (perDia[dia] || 0) + 1;
+            });
+
+            const dias = Object.keys(perDia).sort();
+
+            canvas.chart = new Chart(canvas, {
+                type: 'line',
+                data: {
+                    labels: dias,
+                    datasets: [{
+                        label: 'Compras registradas',
+                        data: dias.map(d => perDia[d]),
+                        borderColor: 'rgba(0, 245, 255, 1)',
+                        backgroundColor: 'rgba(0, 245, 255, 0.2)',
+                        fill: true,
+                        tension: 0.3
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { labels: { color: '#00F5FF' } } },
+                    scales: {
+                        y: { beginAtZero: true, ticks: { color: '#00F5FF', precision: 0 }, grid: { color: 'rgba(0, 245, 255, 0.1)' } },
+                        x: { ticks: { color: '#00F5FF' }, grid: { display: false } }
+                    }
+                }
+            });
+        }
+
+        // ==================== MODALES ====================
+        function showEditDishModal(id, nombre, precio, costo) {
+            document.getElementById('dishName').value = nombre;
+            document.getElementById('dishPrice').value = precio;
+            document.getElementById('dishCost').value = costo;
+            document.getElementById('dishModal').dataset.dishId = id;
+            document.getElementById('dishModal').dataset.isEdit = 'true';
+            
+            // Cambiar título del modal
+            document.querySelector('#dishModal .modal-header').textContent = 'EDITAR PLATILLO';
+            
+            document.getElementById('dishModal').classList.add('show');
+        }
+
+        function showDishModal() {
+            document.getElementById('dishName').value = '';
+            document.getElementById('dishPrice').value = '';
+            document.getElementById('dishCost').value = '';
+            document.getElementById('dishModal').dataset.isEdit = 'false';
+            document.querySelector('#dishModal .modal-header').textContent = 'NUEVO PLATILLO';
+            document.getElementById('dishModal').classList.add('show');
+        }
+
+        function closeDishModal() {
+            document.getElementById('dishModal').classList.remove('show');
+        }
+
+        function saveDish() {
+            const name = document.getElementById('dishName').value;
+            const price = parseFloat(document.getElementById('dishPrice').value);
+            const cost = parseFloat(document.getElementById('dishCost').value);
+            const isEdit = document.getElementById('dishModal').dataset.isEdit === 'true';
+            const dishId = document.getElementById('dishModal').dataset.dishId;
+
+            if (!name || !price || !cost) {
+                alert('COMPLETA LOS CAMPOS');
+                return;
+            }
+
+            const method = isEdit ? 'PUT' : 'POST';
+            const url = isEdit ? `${API_URL}/platillos/${dishId}` : `${API_URL}/platillos`;
+
+            fetch(url, {
+                method: method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    nombre: name,
+                    precio: price,
+                    costo_preparacion: cost
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                renderDishTable();
+                closeDishModal();
+                showToast('success', '✅', isEdit ? 'Platillo actualizado' : 'Platillo agregado');
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showToast('error', '❌', 'Error al guardar el platillo. Revisa la conexión con el servidor.');
+            });
+        }
+
+        function showClientModal() {
+            document.getElementById('clientName').value = '';
+            document.getElementById('clientPhone').value = '';
+            document.getElementById('clientEmail').value = '';
+            document.getElementById('clientAddress').value = '';
+            document.getElementById('clientModal').classList.add('show');
+        }
+
+        function closeClientModal() {
+            document.getElementById('clientModal').classList.remove('show');
+        }
+
+        function saveClient() {
+            const name = document.getElementById('clientName').value;
+            const phone = document.getElementById('clientPhone').value;
+            const email = document.getElementById('clientEmail').value;
+            const address = document.getElementById('clientAddress').value;
+
+            if (!name || !phone || !email || !address) {
+                alert('COMPLETA LOS CAMPOS');
+                return;
+            }
+
+            fetch(`${API_URL}/clientes`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    nombre: name,
+                    telefono: phone,
+                    correo: email,
+                    direccion: address
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                renderClientTable();
+                closeClientModal();
+                showToast('success', '✅', 'Cliente agregado');
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showToast('error', '❌', 'Error al agregar cliente: ' + (error.message || 'verifica que el correo no esté duplicado'));
+            });
+        }
+
+        // Cerrar modales al hacer click afuera
+        window.addEventListener('click', (e) => {
+            if (e.target.id === 'dishModal') closeDishModal();
+            if (e.target.id === 'clientModal') closeClientModal();
+            if (e.target.id === 'orderDetailModal') closeOrderDetail();
+        });
+    </script>
+</body>
+</html>
